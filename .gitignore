@@ -132,3 +132,5 @@ test_*_ca
 test_*_ca.pub
 test_*_user
 test_*_user.pub
+*-cert.pub
+*_cert.pub

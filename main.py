@@ -1,6 +1,6 @@
 # Start by generating the test certificates
 from gen_test_sshkeys import gen_test_sshkeys
-# gen_test_sshkeys()
+gen_test_sshkeys(rsa=False,dsa=False,ed25519=False)
 
 # Now we can test the certificates
 # Generate an ECDSA SSH Certificate:
