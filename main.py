@@ -1,7 +1,8 @@
 import time
+
 # Start by generating the test certificates
 from gen_test_sshkeys import gen_test_sshkeys
-gen_test_sshkeys(dsa=False, ed25519=False)
+gen_test_sshkeys()
 
 # Common attributes
 # (not certificate-type specific)
@@ -38,6 +39,12 @@ certificate_attr = {
 }
 
 # Now we can test the certificates
+
+# Certificate-specific options:
+# Type (Overall): ssh-ecdsa-sha2-nistpXYZ-cert-v01@openssh.com where XYZ is the key size
+# Nonce: Random string to prevent hash collision attacks
+# Curve: The curve used to create the user key
+# Public Key: The public key of the user
 # Generate an ECDSA SSH Certificate:
 from ecdsa_certificates import make_ecdsa_certificate, decode_ecdsa_certificate
 
@@ -53,7 +60,7 @@ make_ecdsa_certificate(
 decoded_ecdsa = decode_ecdsa_certificate('test_ecdsa_user-cert.pub')
 
 assert decoded_ecdsa['serial'] == certificate_attr['serial']
-assert decoded_ecdsa['type'] == certificate_attr['type']
+assert decoded_ecdsa['ctype'] == certificate_attr['type']
 assert decoded_ecdsa['key_id'] == certificate_attr['key_id']
 assert decoded_ecdsa['valid_principals'] == certificate_attr['valid_principals']
 assert decoded_ecdsa['valid_after'] == certificate_attr['valid_after']
@@ -62,7 +69,12 @@ assert decoded_ecdsa['critical_options'] == certificate_attr['critical_options']
 assert decoded_ecdsa['extensions'] == certificate_attr['extensions']
 assert decoded_ecdsa['reserved'] == certificate_attr['reserved']
 
-# Generate an RSA SSH Certificate:
+# Certificate-specific options:
+# Type (Overall): ssh-rsa-cert-v01@openssh.com
+# Nonce: Random string to prevent hash collision attacks
+# e: The E-value from the user's public key numbers
+# n: The N-value from the user's public key numbers
+# Generate a RSA SSH Certificate:
 from rsa_certificates import make_rsa_certificate, decode_rsa_certificate
 make_rsa_certificate(
     user_pubkey_path='test_rsa_user.pub',
@@ -72,15 +84,46 @@ make_rsa_certificate(
     attributes=certificate_attr
     )
 
+
+# Certificate-specific options:
+# Type (Overall): ssh-rsa-cert-v01@openssh.com
+# Nonce: Random string to prevent hash collision attacks
+# p: The P-value from the user's public key parameters
+# q: The Q-value from the user's public key parameters
+# g: The G-value from the user's public key parameters
+# y: The Y-value from the user's public key numbers
 # Decode the certificate and verify the contents
 decoded_rsa = decode_rsa_certificate('test_rsa_user-cert.pub')
 
-assert decoded_ecdsa['serial'] == certificate_attr['serial']
-assert decoded_ecdsa['type'] == certificate_attr['type']
-assert decoded_ecdsa['key_id'] == certificate_attr['key_id']
-assert decoded_ecdsa['valid_principals'] == certificate_attr['valid_principals']
-assert decoded_ecdsa['valid_after'] == certificate_attr['valid_after']
-assert decoded_ecdsa['valid_before'] == certificate_attr['valid_before']
-assert decoded_ecdsa['critical_options'] == certificate_attr['critical_options']
-assert decoded_ecdsa['extensions'] == certificate_attr['extensions']
-assert decoded_ecdsa['reserved'] == certificate_attr['reserved']
+assert decoded_rsa['serial'] == certificate_attr['serial']
+assert decoded_rsa['ctype'] == certificate_attr['type']
+assert decoded_rsa['key_id'] == certificate_attr['key_id']
+assert decoded_rsa['valid_principals'] == certificate_attr['valid_principals']
+assert decoded_rsa['valid_after'] == certificate_attr['valid_after']
+assert decoded_rsa['valid_before'] == certificate_attr['valid_before']
+assert decoded_rsa['critical_options'] == certificate_attr['critical_options']
+assert decoded_rsa['extensions'] == certificate_attr['extensions']
+assert decoded_rsa['reserved'] == certificate_attr['reserved']
+
+# Generate a DSA SSH Certificate
+from dss_certificates import make_dss_certificate, decode_dss_certificate
+make_dss_certificate(
+    user_pubkey_path='test_dss_user.pub',
+    ca_pubkey_path='test_dss_ca.pub',
+    ca_privkey_path='test_dss_ca',
+    ca_privkey_pass='password',
+    attributes=certificate_attr
+    )
+
+# # Decode the certificate and verify the contents
+decoded_dss = decode_dss_certificate('test_dss_user-cert.pub')
+
+assert decoded_dss['serial'] == certificate_attr['serial']
+assert decoded_dss['ctype'] == certificate_attr['type']
+assert decoded_dss['key_id'] == certificate_attr['key_id']
+assert decoded_dss['valid_principals'] == certificate_attr['valid_principals']
+assert decoded_dss['valid_after'] == certificate_attr['valid_after']
+assert decoded_dss['valid_before'] == certificate_attr['valid_before']
+assert decoded_dss['critical_options'] == certificate_attr['critical_options']
+assert decoded_dss['extensions'] == certificate_attr['extensions']
+assert decoded_dss['reserved'] == certificate_attr['reserved']

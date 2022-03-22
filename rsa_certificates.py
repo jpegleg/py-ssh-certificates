@@ -38,7 +38,6 @@ def make_rsa_certificate(
     # Add the certificate type
     # This is based on the users certificate type
     # For RSA, this is usually ssh-rsa-cert-v01@openssh.com
-    # where XXX is the length of the curve in bits
     certificate += utils.encode_string(b'ssh-rsa-cert-v01@openssh.com')
     
     # Add the nonce
@@ -89,7 +88,7 @@ def make_rsa_certificate(
     # Load the CA Private key from the OpenSSH format
     ca_privkey = serialization.load_ssh_private_key(
         data=ca_privkey,
-        password=b"password",
+        password=ca_privkey_pass.encode('utf-8'),
         backend=default_backend()
     )
  
@@ -124,7 +123,7 @@ def decode_rsa_certificate(certificate_path: str):
     cert_decoded = {}
   
     # Get the certificate type
-    cert_decoded['type'], certificate = utils.decode_string(certificate)
+    cert_decoded['ktype'], certificate = utils.decode_string(certificate)
 
     # Get the nonce
     cert_decoded['nonce'], certificate = utils.decode_string(certificate)
@@ -146,7 +145,7 @@ def decode_rsa_certificate(certificate_path: str):
     cert_decoded['serial'], certificate = utils.decode_int64(certificate)
 
     # Get the certificate type
-    cert_decoded['type'], certificate = utils.decode_int(certificate)
+    cert_decoded['ctype'], certificate = utils.decode_int(certificate)
     
     # Get the certificate key ID
     cert_decoded['key_id'], certificate = utils.decode_string(certificate)

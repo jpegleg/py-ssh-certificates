@@ -1,5 +1,5 @@
 # Python OpenSSH Certificates
-A small and simple implementation of OpenSSH Certificates in Python. Generates RSA, ECDSA, ED25519 and DSA certificates
+A small and simple implementation of OpenSSH Certificates in Python. Generates RSA, ECDSA, ED25519 and DSA(DSS) certificates
 
 # Installation
 1. Clone the repository and make sure python3 and python3-pip are installed
