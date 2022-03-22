@@ -134,3 +134,4 @@ test_*_user
 test_*_user.pub
 *-cert.pub
 *_cert.pub
+test_*.py
