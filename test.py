@@ -74,7 +74,7 @@ class TestCertificate(unittest.TestCase):
         self.assertEqual(self.config['attributes']['reserved'], decoded['reserved'])
 
     def tearDown(self):
-        remove_test_sshkeys()
+        remove_test_sshkeys(True)
 
 
 class RSATest(TestCertificate):
