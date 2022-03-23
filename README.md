@@ -12,4 +12,9 @@ python3 main.py
 - Generates two keypairs for each keytype
 - Generates a SSH Certificate for each keytype
 - Decodes the SSH Certificate and verifies the values
-- (Validates the signature) Upcoming
+
+# What it (currently) doesn't
+- Validate the certificate signature against a CA pubkey (in-cert or provided)
+- Cross-signing of certificates (e.g. ECDSA User and ED25519 CA) (although this is a simple matter of copy and paste to replace the signature part on each certificate. The cert type is based on the user key type)
+- Create/verify signed Host keys (although this is a simple matter of changing the certificate type to 2)
+- Create/verify FIDO2 (sk-) ED25519/ECSDA keys

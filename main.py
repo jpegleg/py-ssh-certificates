@@ -1,8 +1,8 @@
 import time
 
 # Start by generating the test certificates
-from gen_test_sshkeys import gen_test_sshkeys
-gen_test_sshkeys()
+from test_sshkeys import gen_test_sshkeys, remove_test_sshkeys
+gen_test_sshkeys('password')
 
 # Common attributes
 # (not certificate-type specific)
@@ -127,3 +127,35 @@ assert decoded_dss['valid_before'] == certificate_attr['valid_before']
 assert decoded_dss['critical_options'] == certificate_attr['critical_options']
 assert decoded_dss['extensions'] == certificate_attr['extensions']
 assert decoded_dss['reserved'] == certificate_attr['reserved']
+
+# Certificate-specific options:
+# Type (Overall): ssh-rsa-cert-v01@openssh.com
+# Nonce: Random string to prevent hash collision attacks
+# pk: Encoded ED25519 public key as per RFC8032
+
+# Generate an ED25519 SSH Certificate
+from ed25519_certificates import make_ed25519_certificate, decode_ed25519_certificate
+
+make_ed25519_certificate(
+    user_pubkey_path='test_ed25519_user.pub',
+    ca_pubkey_path='test_ed25519_ca.pub',
+    ca_privkey_path='test_ed25519_ca',
+    attributes=certificate_attr
+)
+
+# # # Decode the certificate and verify the contents
+decoded_ed25519 = decode_ed25519_certificate('test_ed25519_user-cert.pub')
+
+assert decoded_ed25519['serial'] == certificate_attr['serial']
+assert decoded_ed25519['ctype'] == certificate_attr['type']
+assert decoded_ed25519['key_id'] == certificate_attr['key_id']
+assert decoded_ed25519['valid_principals'] == certificate_attr['valid_principals']
+assert decoded_ed25519['valid_after'] == certificate_attr['valid_after']
+assert decoded_ed25519['valid_before'] == certificate_attr['valid_before']
+assert decoded_ed25519['critical_options'] == certificate_attr['critical_options']
+assert decoded_ed25519['extensions'] == certificate_attr['extensions']
+assert decoded_ed25519['reserved'] == certificate_attr['reserved']
+
+
+# Remove the generated files, leaving the certificates
+remove_test_sshkeys()

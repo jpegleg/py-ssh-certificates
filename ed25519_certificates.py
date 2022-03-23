@@ -4,17 +4,9 @@ from base64 import b64encode, b64decode
 import sshcert_utils as utils
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.primitives import serialization
 
-CURVES = {
-    'secp256r1': hashes.SHA256,
-    'secp384r1': hashes.SHA384,
-    'secp521r1': hashes.SHA512
-}
-
-def make_ecdsa_certificate(
+def make_ed25519_certificate(
         user_pubkey_path: str, 
         ca_pubkey_path: str, 
         ca_privkey_path: str, 
@@ -39,9 +31,6 @@ def make_ecdsa_certificate(
         # The Key type (e.g. ecdsa-sha2-nistp256)
         user_keytype, data = utils.decode_string(data)
         
-        # The curve (e.g. nistp256)
-        user_keycurve, data = utils.decode_string(data)
-        
         # The public key in bytes
         user_pubkey, data = utils.decode_string(data)  
     
@@ -59,9 +48,8 @@ def make_ecdsa_certificate(
     
     # Add the certificate type
     # This is based on the users certificate type
-    # For ECDSA, this is usually ecdsa-sha2-nistpXXX-cert-v01@openssh.com
-    # where XXX is the length of the curve in bits
-    certificate += utils.encode_string(b'%s-cert-v01@openssh.com' % user_keytype)
+    # For ED25519, this is usually ssh-ed25519-cert-v01@openssh.com
+    certificate += utils.encode_string('ssh-ed25519-cert-v01@openssh.com')
 
     # Add the nonce
     # This is the random part of the certificate which is used
@@ -72,10 +60,6 @@ def make_ecdsa_certificate(
     nonce = utils.generate_secure_nonce(32)
     certificate += utils.encode_string(nonce)
   
-    # Add the curve used to create the user key
-    # certificate += utils.encode_string(user_keycurve)
-    certificate += utils.encode_string(user_keycurve)
-
     # Add the users public key
     certificate += utils.encode_string(user_pubkey)
     
@@ -120,21 +104,15 @@ def make_ecdsa_certificate(
         backend=default_backend()
     )
     
-    # Get the curve used in the private key
-    curve = ec.ECDSA(CURVES[ca_privkey.curve.name]())
 
-    # Create the signature
-    signature = ca_privkey.sign(
-        certificate,
-        curve
-    )
+    # Create the signature    
+    signature = utils.encode_string('ssh-ed25519')
+    signature += utils.encode_string(ca_privkey.sign(certificate))
+
+    # Append the signature to the certificate
+    certificate += utils.encode_string(signature)
     
-    # Get the signature parts, r and s
-    r, s = decode_dss_signature(signature)
-       
-    # Add the signature to the certificate
-    certificate += utils.encode_dsa_signature(r, s, 'ecdsa-sha2-nistp%d' % ca_privkey.curve.key_size)
-
+    
     # Write the certificate to file
     filename = f'{user_pubkey_path.split("/")[-1].split(".")[0]}-cert.pub'
     with open(filename, 'wb') as f:
@@ -151,7 +129,7 @@ def make_ecdsa_certificate(
     if auto_verify:
         os.system(f'ssh-keygen -Lf {filename}')
     
-def decode_ecdsa_certificate(certificate_path: str):
+def decode_ed25519_certificate(certificate_path: str):
     with open(certificate_path, 'r') as f:
         certificate = b64decode(f.read().split(' ')[1])
 
@@ -163,9 +141,6 @@ def decode_ecdsa_certificate(certificate_path: str):
     # Get the nonce
     cert_decoded['nonce'], certificate = utils.decode_string(certificate)
     
-    # Get the user key curve
-    cert_decoded['curve'], certificate = utils.decode_string(certificate)
-
     # Get the user public key
     cert_decoded['pubkey'], certificate = utils.decode_string(certificate)
 
@@ -200,11 +175,18 @@ def decode_ecdsa_certificate(certificate_path: str):
     cert_decoded['ca_pubkey'], certificate = utils.decode_string(certificate)
     
     # Get the signature
-    cert_decoded['signature'], _ = utils.decode_dsa_signature(certificate)
+    signature_encoded = utils.decode_string(certificate)[0]
     
+    cert_decoded['signature'] = {}
+    cert_decoded['signature']['type'], signature_encoded = utils.decode_string(signature_encoded)
+    cert_decoded['signature']['bytes'] = utils.decode_string(signature_encoded)[0]
+    
+    
+    # Decode bytes and/or b64encode to allow for JSON serialization  
     cert_decoded['pubkey'] = b64encode(cert_decoded['pubkey']).decode('utf-8')
     cert_decoded['ca_pubkey'] = b64encode(cert_decoded['ca_pubkey']).decode('utf-8')
-    cert_decoded['signature']['curve'] = cert_decoded['signature']['curve'].decode('utf-8')
+
+    cert_decoded['signature']['type'] = cert_decoded['signature']['type'].decode('utf-8')
     
     for item in cert_decoded.keys():
         if isinstance(cert_decoded[item], bytes):

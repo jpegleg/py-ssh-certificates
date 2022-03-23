@@ -5,13 +5,15 @@ import sshcert_utils as utils
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature, encode_dss_signature
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+
 def make_dss_certificate(
         user_pubkey_path: str, 
         ca_pubkey_path: str, 
         ca_privkey_path: str, 
         ca_privkey_pass: str = "password",
-        attributes: dict = {}
+        attributes: dict = {},
+        auto_verify: bool = True
     ):
     
     
@@ -76,7 +78,7 @@ def make_dss_certificate(
     certificate += utils.encode_int64(attributes.get('valid_before', int(timestamp()) + (60 * 60 * 12)))
     
     # Add any critical options to the certificate
-    certificate += utils.encode_list(attributes.get('critical_options', []))
+    certificate += utils.encode_list(attributes.get('critical_options', []), True)
 
     # This is encoded a bit differently than the principals list, with null bytes inserted between each extensions
     certificate += utils.encode_list(attributes.get('extensions', ['permit-agent-forwarding']), True)
@@ -119,7 +121,8 @@ def make_dss_certificate(
         
         
     # Verify the certificate with SSH-Keygen
-    os.system(f'ssh-keygen -Lf {filename}')
+    if auto_verify:
+        os.system(f'ssh-keygen -Lf {filename}')
 
 
 def decode_dss_certificate(certificate_path: str):
@@ -159,7 +162,7 @@ def decode_dss_certificate(certificate_path: str):
     cert_decoded['valid_before'], certificate = utils.decode_int64(certificate)
     
     # Get the certificate critical options
-    cert_decoded['critical_options'], certificate = utils.decode_list(certificate)
+    cert_decoded['critical_options'], certificate = utils.decode_list(certificate, True)
     
     # Get the certificate extensions
     cert_decoded['extensions'], certificate = utils.decode_list(certificate, True)

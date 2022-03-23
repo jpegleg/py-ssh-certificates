@@ -42,7 +42,7 @@ def encode_mpint(source_int: int) -> bytes:
     return encode_string(long_to_bytes(source_int))
 
 def encode_list(source_list: list, null_separator: bool = False):
-    if null_separator:
+    if null_separator and len(source_list) > 0:
         return encode_string(encode_string('').join([
             encode_string(x) for x in source_list
         ]) + encode_string(''))
