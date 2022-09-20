@@ -1,9 +1,13 @@
 import time
-
-# Start by generating the test certificates
+import datetime
 from test_sshkeys import gen_test_sshkeys, remove_test_sshkeys
 gen_test_sshkeys('password')
 
+
+print("---------------| starting ssh certificate tests")
+print("")
+print("----->>> UTC start time ref in ISO format:", datetime.datetime.utcfromtimestamp(int(time.time())).isoformat())
+print("")
 # Common attributes
 # (not certificate-type specific)
 # See https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
@@ -37,6 +41,8 @@ certificate_attr = {
     ],
     "reserved": ""
 }
+
+print("-----<<< ISO expiration ref:", datetime.datetime.utcfromtimestamp(int(time.time() + 60 * 60 * 12)).isoformat())
 
 # Now we can test the certificates
 
@@ -156,6 +162,6 @@ assert decoded_ed25519['critical_options'] == certificate_attr['critical_options
 assert decoded_ed25519['extensions'] == certificate_attr['extensions']
 assert decoded_ed25519['reserved'] == certificate_attr['reserved']
 
-
-# Remove the generated files, leaving the certificates
-remove_test_sshkeys()
+print("")
+print("-| UTC end time ref in ISO format:", datetime.datetime.utcfromtimestamp(int(time.time())).isoformat())
+print("---------------| ssh certificate tests end")
