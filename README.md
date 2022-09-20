@@ -5,8 +5,13 @@ A small and simple implementation of OpenSSH Certificates in Python. Generates R
 1. Clone the repository and make sure python3 and python3-pip are installed
 2. Run pip3 install -r requirements.txt
 
-# Usage
-python3 main.py
+# frozen reference 
+This fork of this project is considered a point-in-time reference and is not going to be updated to new versions and fixes.
+
+# test usage
+yes | python3 main_tests.py
+
+The "yes" is used to respond to overwriting the test ca keys. In this fork of the project, we leave the ca keys for further testing use and overwrite them on the next run via "yes".
 
 # What it does
 - Generates two keypairs for each keytype
